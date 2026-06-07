@@ -8,7 +8,7 @@ branding:
 
 inputs:
   github_token:
-    description: "GitHub token with read access to issues, PRs, and timelines. Use ${{ secrets.GITHUB_TOKEN }} for public repos, or a PAT with `read:user` + `repo` scope if you want private-repo activity counted."
+    description: "GitHub token with read access to issues, PRs, and timelines. Pass secrets.GITHUB_TOKEN from your workflow for public repos, or a PAT with read:user + repo scopes if you want private-repo activity counted."
     required: true
   username:
     description: "GitHub username to generate the card for"
@@ -54,19 +54,15 @@ runs:
 
     - name: Generate contribution card
       shell: bash
+      working-directory: .gh-contrib-stats-tool
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        node --experimental-strip-types .gh-contrib-stats-tool/src/index.ts \
+        npx tsx src/index.ts \
           --user "${{ inputs.username }}" \
-          --output "${{ inputs.output_path }}" \
+          --output "${{ github.workspace }}/${{ inputs.output_path }}" \
           --theme "${{ inputs.theme }}" \
-          --cache-ttl "${{ inputs.cache_ttl_minutes }}" \
-          || npx --yes -p tsx@4 tsx .gh-contrib-stats-tool/src/index.ts \
-               --user "${{ inputs.username }}" \
-               --output "${{ inputs.output_path }}" \
-               --theme "${{ inputs.theme }}" \
-               --cache-ttl "${{ inputs.cache_ttl_minutes }}"
+          --cache-ttl "${{ inputs.cache_ttl_minutes }}"
 
     - name: Remove tool checkout to keep repo clean
       shell: bash
@@ -77,7 +73,8 @@ runs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git add "${{ inputs.output_path }}" .gh-contrib-stats-cache.json 2>/dev/null || true
+        rm -f .gh-contrib-stats-cache.json
+        git add "${{ inputs.output_path }}" 2>/dev/null || true
         if git diff --cached --quiet; then
           echo "No changes to commit."
         else
