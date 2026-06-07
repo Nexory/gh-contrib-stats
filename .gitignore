@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .gh-contrib-stats-cache.json
+.bugmerge-stats-cache.json
 *.log
 .env
 .DS_Store
