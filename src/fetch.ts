@@ -260,20 +260,14 @@ export async function fetchAllMetrics(opts: FetchOptions): Promise<RawData> {
     await sleep(80); // respect rate limits
   }
 
-  // 8. Avatar
-  let avatarUrl = '';
-  if (!noAvatar) {
-    try {
-      const { data: userData } = await octokit.rest.users.getByUsername({ username: user });
-      const imgRes = await fetch(userData.avatar_url);
-      const buf = await imgRes.arrayBuffer();
-      const b64 = Buffer.from(buf).toString('base64');
-      const mime = imgRes.headers.get('content-type') || 'image/png';
-      avatarUrl = `data:${mime};base64,${b64}`;
-    } catch {
-      avatarUrl = '';
-    }
-  }
+  // 8. Avatar: intentionally NOT fetched. raw.githubusercontent.com serves
+  // SVGs with a strict CSP (`default-src 'none'`) that blocks data: URIs in
+  // <image> elements, so a base64-embedded avatar would be silently dropped
+  // when the card is embedded via the raw URL. The template renders pure-SVG
+  // initials that work under any CSP.
+  // noAvatar option is kept for backward compatibility but unused.
+  void noAvatar;
+  const avatarUrl = '';
 
   return {
     user,

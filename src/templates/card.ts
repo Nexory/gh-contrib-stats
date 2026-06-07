@@ -24,9 +24,19 @@ export function cardTemplate(d: MetricsResult): string {
     .slice(0, 5)
     .join(' · ');
 
-  const avatarElement = d.avatarUrl
-    ? `<image href="${d.avatarUrl}" x="118" y="128" width="144" height="144" clip-path="url(#avatar-clip)" preserveAspectRatio="xMidYMid slice"/>`
-    : `<circle cx="190" cy="200" r="72" fill="#0e1b3a"/><text x="190" y="215" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="56" font-weight="800" fill="#3b82f6" text-anchor="middle" opacity="0.6">${esc(d.handle[0]?.toUpperCase() ?? '?')}</text>`;
+  // CSP-safe initials avatar (raw.githubusercontent.com serves SVGs with
+  // `default-src 'none'` which blocks data: URIs in <image> elements, so we
+  // never embed a raster avatar). Initials are drawn as pure SVG primitives
+  // that render under any CSP. Up to 2 characters: first letter + first
+  // uppercase mid-word letter if present.
+  const handleChars = d.handle.replace(/[^a-zA-Z0-9]/g, '');
+  const firstChar = handleChars[0]?.toUpperCase() ?? '?';
+  const midUpper = handleChars.slice(1).match(/[A-Z0-9]/)?.[0];
+  const initials = midUpper ? `${firstChar}${midUpper}` : firstChar;
+  const initialsFontSize = initials.length === 2 ? 46 : 60;
+  const avatarElement =
+    `<circle cx="190" cy="200" r="72" fill="url(#avatar-fill)"/>` +
+    `<text x="190" y="${initials.length === 2 ? 218 : 220}" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="${initialsFontSize}" font-weight="800" fill="#e2e8f0" text-anchor="middle" letter-spacing="-1">${esc(initials)}</text>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="1200" height="600" viewBox="0 0 1200 600"
@@ -45,6 +55,10 @@ export function cardTemplate(d: MetricsResult): string {
       <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="avatar-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#7c2d92"/>
+    </linearGradient>
     <linearGradient id="left-panel-grad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0e1b3a"/>
       <stop offset="100%" stop-color="#0b1226"/>
