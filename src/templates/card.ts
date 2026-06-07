@@ -24,19 +24,23 @@ export function cardTemplate(d: MetricsResult): string {
     .slice(0, 5)
     .join(' · ');
 
-  // CSP-safe initials avatar (raw.githubusercontent.com serves SVGs with
-  // `default-src 'none'` which blocks data: URIs in <image> elements, so we
-  // never embed a raster avatar). Initials are drawn as pure SVG primitives
-  // that render under any CSP. Up to 2 characters: first letter + first
-  // uppercase mid-word letter if present.
+  // Avatar: render the user's GitHub photo when available, else fall back to
+  // SVG initials. The photo path uses BOTH href and xlink:href for max
+  // compatibility across SVG renderers. raw.githubusercontent.com's strict
+  // CSP blocks data: URIs when the SVG is viewed there directly; in the
+  // primary use case (embedded in a README via GitHub's camo image proxy)
+  // the photo renders normally.
   const handleChars = d.handle.replace(/[^a-zA-Z0-9]/g, '');
   const firstChar = handleChars[0]?.toUpperCase() ?? '?';
   const midUpper = handleChars.slice(1).match(/[A-Z0-9]/)?.[0];
   const initials = midUpper ? `${firstChar}${midUpper}` : firstChar;
   const initialsFontSize = initials.length === 2 ? 46 : 60;
-  const avatarElement =
+  const initialsFallback =
     `<circle cx="190" cy="200" r="72" fill="url(#avatar-fill)"/>` +
     `<text x="190" y="${initials.length === 2 ? 218 : 220}" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="${initialsFontSize}" font-weight="800" fill="#e2e8f0" text-anchor="middle" letter-spacing="-1">${esc(initials)}</text>`;
+  const avatarElement = d.avatarUrl
+    ? `<image href="${d.avatarUrl}" xlink:href="${d.avatarUrl}" x="118" y="128" width="144" height="144" clip-path="url(#avatar-clip)" preserveAspectRatio="xMidYMid slice"/>`
+    : initialsFallback;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="1200" height="600" viewBox="0 0 1200 600"

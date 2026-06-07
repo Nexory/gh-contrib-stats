@@ -1,104 +1,125 @@
 # gh-contrib-stats
 
-A CLI tool and GitHub Action that generates a static SVG contribution card for any GitHub user, including the unique **filed-and-fixed** metric: issues you filed that were later fixed by a third-party maintainer PR.
+Static SVG contribution card for your GitHub profile README, including the unique **filed-and-fixed lineage**: issues you filed that a maintainer later closed with their own merged PR.
 
-No other tool tracks this lineage.
+![Example card for Nexory](examples/nexory-card.svg)
 
-![example card](examples/nexory-card.svg)
+## What's different about this card
 
----
+Most contribution-stats tools count what you authored: PRs merged, issues created, commits. Nobody tracks the *opposite* signal: bugs you found that turned into someone else's merged PR. That's "I filed an issue and a maintainer cared enough to fix it" - a fairly clean indicator of useful upstream contribution, and the data is already in the GitHub timeline API; you just need to walk it.
 
-## Metrics shown
+The card surfaces six numbers:
 
-| Metric | What it counts |
+| Metric | What it means |
 |---|---|
-| Issues Filed | All issues authored by you across all public repos |
-| PRs Merged | Pull requests you authored that were merged |
-| Repos Contributed | Distinct repos touched via issues or PRs |
-| Comment Threads | Distinct issues/PRs where you left a comment |
-| Filed & Fixed | Issues you filed where a **third-party** PR fixed it |
-| Rank | Weighted grade: S / A / B / C / D |
+| Issues | Issues you filed across all repos (open + closed) |
+| PRs Merged | Pull requests you authored that were merged upstream |
+| Repos | Distinct repos you contributed to (issues + PRs) |
+| Threads | Issues / PRs where you left at least one comment |
+| Filed & Fixed | Issues you filed that a third-party PR closed (the lineage metric) |
+| Rank | S / A / B / C / D from a weighted score of the above |
 
----
+## Add it to your own profile in 2 steps
 
-## Quick start
+### 1. Create the workflow file
 
-```bash
-npx gh-contrib-stats --user YOUR_HANDLE --output card.svg
-```
-
-With a token (recommended - raises rate limit from 60 to 5000 req/h):
-
-```bash
-GITHUB_TOKEN=ghp_xxx npx gh-contrib-stats --user YOUR_HANDLE --output card.svg
-```
-
-Embed in your GitHub profile README:
-
-```markdown
-![Contribution Stats](./card.svg)
-```
-
----
-
-## GitHub Action (auto-update)
-
-Add this to `.github/workflows/update-card.yml` in your profile repo:
+In your **profile repo** (the one named `YOURHANDLE/YOURHANDLE`), create `.github/workflows/update-card.yml`:
 
 ```yaml
 name: Update contribution card
+
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "0 3 * * *"   # 03:00 UTC daily
   workflow_dispatch:
 
 jobs:
-  update:
+  update-card:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: Nexory/gh-contrib-stats@v1
+      - uses: Nexory/gh-contrib-stats@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          username: YOUR_HANDLE
-          output_path: card.svg
+          username: YOURHANDLE
 ```
 
----
+### 2. Embed the card in your README
+
+Add this line to your profile `README.md`:
+
+```markdown
+![GitHub Contribution Stats](https://raw.githubusercontent.com/YOURHANDLE/YOURHANDLE/main/card.svg)
+```
+
+That's it. The first time the workflow runs (you can trigger it manually under the Actions tab) it commits `card.svg` to the repo, and the README image link starts resolving. After that the daily cron keeps it fresh.
+
+## Run it locally (without the Action)
+
+If you want to generate a one-off SVG without committing anything:
+
+```bash
+GITHUB_TOKEN=ghp_xxx npx --yes github:Nexory/gh-contrib-stats --user YOURHANDLE --output card.svg
+```
+
+Or clone + build:
+
+```bash
+git clone https://github.com/Nexory/gh-contrib-stats
+cd gh-contrib-stats
+npm install
+GITHUB_TOKEN=ghp_xxx npx tsx src/index.ts --user YOURHANDLE --output card.svg
+```
+
+A GitHub personal access token lifts the rate limit from 60 to 5000 req/h. The tool works without one for small accounts.
 
 ## CLI flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--user` | required | GitHub username |
-| `--output` | required | Output SVG path |
-| `--theme` | `dark` | `dark` or `light` |
-| `--token` | `$GITHUB_TOKEN` | Personal access token |
-| `--no-avatar` | false | Skip avatar fetch |
-| `--cache-ttl` | `360` | Cache TTL in minutes |
+```
+gh-contrib-stats --user <handle> --output <path.svg> [options]
 
----
+  --user <handle>          GitHub username (required)
+  --output <path>          SVG output path (required)
+  --theme dark             Theme (only "dark" in v0.1.0)
+  --token <tok>            GitHub token (or set $GITHUB_TOKEN)
+  --cache-ttl <minutes>    Local cache TTL in minutes (default 360)
+  --no-avatar              No-op kept for backward compat (avatars are always rendered as SVG initials; see below)
+```
 
-## How filed-and-fixed works
+## Why the avatar is initials, not a photo
 
-The tool walks the GitHub issue timeline for each closed issue you filed. It looks for a `cross-referenced` event where:
+`raw.githubusercontent.com` serves `.svg` files with `Content-Security-Policy: default-src 'none'`. That CSP silently blocks `data:` URIs inside `<image>` elements, which is the only way to inline a raster avatar in a static SVG that gets embedded across origins. So instead of a broken-image placeholder showing up in everybody's README, the card renders the first letter (or PascalCase pair) of the handle as a gradient circle. Works under any CSP, looks intentional, keeps the SVG under 10 KB.
 
-1. The source is a **pull request** (not another issue).
-2. That PR was **merged** (`merged_at` is non-null).
-3. The PR author is **not you** (third-party fix, not self-close).
+## How `filed-and-fixed` is computed
 
-This is the only public tool that surfaces this metric.
+For each closed issue authored by the user, walk the issue timeline via `GET /repos/{owner}/{repo}/issues/{number}/timeline`. Look for:
 
----
+1. A `closed` event whose `commit_id` references a PR not authored by the user, or
+2. A `cross-referenced` event whose source is a pull request with `merged: true` and a different author.
 
-## Rate limits
+Either pattern counts as one filed-and-fixed entry. The closing PR URL + author are stored so future versions of the card can surface them.
 
-- Without token: 60 requests/hour (public API). Sufficient for users with fewer than 50 issues.
-- With token: 5000 requests/hour. Sufficient for all users.
-- Results are cached for 6 hours in `.gh-contrib-stats-cache.json`.
+Edge cases handled:
 
----
+- User closes their own issue: not counted (no maintainer contribution).
+- Issue closed as `not_planned`: not counted.
+- PR not merged at issue-close time: not counted.
+- Bot PR authors (`[bot]` suffix): not counted.
+- Archived / private repos where the timeline API returns 404: silently skipped.
+
+## Rate limit / refresh cadence
+
+The tool makes roughly 12 GitHub API calls plus 1 per closed issue (up to 200) per refresh, so on the order of 100-220 calls. The action defaults to a 23-hour cache TTL so a single daily run uses well under 1 % of the authenticated rate limit budget. If you'd rather refresh less often, set `cache_ttl_minutes` higher or set the cron to e.g. weekly.
+
+## Tech
+
+- TypeScript 5.4, Node 20
+- `@octokit/rest` + `@octokit/graphql` for data
+- Pure string templating for SVG (no rendering deps)
+- `esbuild` for the CLI bundle
 
 ## License
 
-MIT - Nexory 2026
+MIT, see LICENSE.

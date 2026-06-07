@@ -1,0 +1,86 @@
+name: "gh-contrib-stats"
+description: "Generate a static SVG contribution card and commit it to your repo. Includes the unique filed-and-fixed lineage metric."
+author: "Nexory"
+
+branding:
+  icon: "bar-chart-2"
+  color: "blue"
+
+inputs:
+  github_token:
+    description: "GitHub token with read access to issues, PRs, and timelines. Use ${{ secrets.GITHUB_TOKEN }} for public repos, or a PAT with `read:user` + `repo` scope if you want private-repo activity counted."
+    required: true
+  username:
+    description: "GitHub username to generate the card for"
+    required: true
+  output_path:
+    description: "Output SVG file path relative to repo root"
+    required: false
+    default: "card.svg"
+  theme:
+    description: "Card theme: dark (only option for v0.1.0)"
+    required: false
+    default: "dark"
+  commit_message:
+    description: "Git commit message for the updated card"
+    required: false
+    default: "chore: update contribution card [skip ci]"
+  cache_ttl_minutes:
+    description: "How long to cache API results in minutes before re-fetching. Default 1380 (just under 24h)."
+    required: false
+    default: "1380"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout gh-contrib-stats tool
+      uses: actions/checkout@v4
+      with:
+        repository: Nexory/gh-contrib-stats
+        path: .gh-contrib-stats-tool
+        ref: main
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+        cache-dependency-path: .gh-contrib-stats-tool/package-lock.json
+
+    - name: Install tool dependencies
+      shell: bash
+      working-directory: .gh-contrib-stats-tool
+      run: npm ci --prefer-offline --no-audit --no-fund
+
+    - name: Generate contribution card
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        node --experimental-strip-types .gh-contrib-stats-tool/src/index.ts \
+          --user "${{ inputs.username }}" \
+          --output "${{ inputs.output_path }}" \
+          --theme "${{ inputs.theme }}" \
+          --cache-ttl "${{ inputs.cache_ttl_minutes }}" \
+          || npx --yes -p tsx@4 tsx .gh-contrib-stats-tool/src/index.ts \
+               --user "${{ inputs.username }}" \
+               --output "${{ inputs.output_path }}" \
+               --theme "${{ inputs.theme }}" \
+               --cache-ttl "${{ inputs.cache_ttl_minutes }}"
+
+    - name: Remove tool checkout to keep repo clean
+      shell: bash
+      run: rm -rf .gh-contrib-stats-tool
+
+    - name: Commit updated card
+      shell: bash
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add "${{ inputs.output_path }}" .gh-contrib-stats-cache.json 2>/dev/null || true
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "${{ inputs.commit_message }}"
+          git push
+        fi

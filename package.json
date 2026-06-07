@@ -8,7 +8,7 @@
   },
   "files": [
     "dist",
-    "action"
+    "action.yml"
   ],
   "scripts": {
     "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/index.js",
