@@ -85,12 +85,36 @@ gh-contrib-stats --user <handle> --output <path.svg> [options]
   --theme dark             Theme (only "dark" in v0.1.0)
   --token <tok>            GitHub token (or set $GITHUB_TOKEN)
   --cache-ttl <minutes>    Local cache TTL in minutes (default 360)
-  --no-avatar              No-op kept for backward compat (avatars are always rendered as SVG initials; see below)
+  --no-avatar              Skip the avatar fetch; render SVG initials instead
 ```
 
-## Why the avatar is initials, not a photo
+## Token scope: what `secrets.GITHUB_TOKEN` can and cannot see
 
-`raw.githubusercontent.com` serves `.svg` files with `Content-Security-Policy: default-src 'none'`. That CSP silently blocks `data:` URIs inside `<image>` elements, which is the only way to inline a raster avatar in a static SVG that gets embedded across origins. So instead of a broken-image placeholder showing up in everybody's README, the card renders the first letter (or PascalCase pair) of the handle as a gradient circle. Works under any CSP, looks intentional, keeps the SVG under 10 KB.
+When the action runs in your profile repo it uses `secrets.GITHUB_TOKEN` by default. That token's GitHub search scope matches what an anonymous browser sees: **public repos only**. If you have private repos where you've merged PRs or filed issues, those counts will not appear on the card.
+
+This is intentional behaviour for a public-profile card. The visitor reading your profile can verify every number themselves by running the same search. To include private activity you can pass a personal access token with `repo` + `read:user` scopes via a repo secret:
+
+```yaml
+- uses: Nexory/gh-contrib-stats@<sha>
+  with:
+    github_token: ${{ secrets.CARD_TOKEN }}   # PAT, not GITHUB_TOKEN
+    username: YOURHANDLE
+```
+
+## Why the avatar can disappear when you open the raw URL directly
+
+`raw.githubusercontent.com` serves `.svg` files with `Content-Security-Policy: default-src 'none'`, which blocks `data:` URIs inside `<image>` elements. That CSP only applies when you open the raw URL directly in a browser. When the same SVG is embedded in a README via GitHub's image proxy (the actual use case for this tool), camo serves it under a permissive CSP and the avatar renders fine.
+
+Quick reference:
+
+| Context | Avatar visible? |
+|---|---|
+| `https://github.com/USER/USER/blob/main/card.svg` (blob view) | yes |
+| `https://raw.githubusercontent.com/USER/USER/main/card.svg` (direct raw) | no (CSP blocks data: URI) |
+| `![](raw URL)` embedded in any GitHub-rendered Markdown | yes (camo proxy) |
+| Saved to disk and opened locally | yes |
+
+If you want the avatar to render in the direct-raw view too, pass `--no-avatar` to fall back to the SVG initials variant (8 KB vs 220 KB and works under any CSP, but no photo).
 
 ## How `filed-and-fixed` is computed
 
