@@ -3,7 +3,7 @@
      role="img" aria-labelledby="card-title card-desc">
 
   <title id="card-title">Nexory - GitHub Contribution Stats</title>
-  <desc id="card-desc">Contribution card for Nexory: 78 issues filed, 16 PRs merged, 41 repos contributed, 12 comment threads, 15 filed-and-fixed. Rank: S.</desc>
+  <desc id="card-desc">Contribution card for Nexory: 78 issues filed, 16 PRs merged, 41 repos contributed, 13 comment threads, 16 filed-and-fixed. Rank: S.</desc>
 
   <defs>
     <clipPath id="avatar-clip"><circle cx="190" cy="200" r="72"/></clipPath>
@@ -40,7 +40,12 @@
   <text x="190" y="442" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="13" font-weight="500" fill="#94a3b8" text-anchor="middle">RANK</text>
   <text x="190" y="475" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="36" font-weight="800" fill="#e2e8f0" text-anchor="middle" letter-spacing="-0.5">S</text>
   <rect x="115" y="490" width="150" height="34" rx="17" fill="#1e2d5a"/>
-  <text x="190" y="512" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#7dd3fc" text-anchor="middle">15 filed &amp; fixed</text>
+  <text x="190" y="512" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#7dd3fc" text-anchor="middle">16 filed &amp; fixed</text>
+
+  <!-- Tool attribution. SVG <a> works on direct view; camo strips link interactivity in README embeds (text remains visible). README-side workaround: wrap the embed in a markdown link. -->
+  <a href="https://github.com/Nexory/BugMergeStats" target="_blank" rel="noopener">
+    <text x="190" y="552" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" fill="#64748b" text-anchor="middle" opacity="0.6">stats by BugMergeStats</text>
+  </a>
 
   <!-- TOP-LEFT: Issues Filed (green) -->
   <rect x="415" y="40" width="365" height="250" rx="14" fill="#0d1f3c"/>
@@ -54,7 +59,7 @@
   </g>
   <text x="437" y="80" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#22c55e" letter-spacing="1.5" opacity="0.8">ISSUES FILED</text>
   <text x="437" y="170" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="72" font-weight="800" fill="#e2e8f0" letter-spacing="-3">78</text>
-  <text x="437" y="200" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="13" fill="#64748b">47 open · 31 closed</text>
+  <text x="437" y="200" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="13" fill="#64748b">43 open · 35 closed</text>
   <text x="437" y="268" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" fill="#22c55e" opacity="0.7">top: hono · open-webui · svelte</text>
 
   <!-- TOP-RIGHT: PRs Merged (blue) -->
@@ -81,7 +86,7 @@
   <text x="437" y="350" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#a855f7" letter-spacing="1.5" opacity="0.8">REPOS CONTRIBUTED</text>
   <text x="437" y="430" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="72" font-weight="800" fill="#e2e8f0" letter-spacing="-3">41</text>
   <text x="437" y="465" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="13" fill="#64748b">distinct repositories</text>
-  <text x="437" y="540" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" fill="#a855f7" opacity="0.7">12 comment threads</text>
+  <text x="437" y="540" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" fill="#a855f7" opacity="0.7">13 comment threads</text>
 
   <!-- BOTTOM-RIGHT: Filed-and-Fixed (amber) -->
   <rect x="800" y="310" width="365" height="250" rx="14" fill="#0d1f3c"/>
@@ -92,7 +97,7 @@
     <line x1="982" y1="310" x2="982" y2="560" stroke="#f59e0b" stroke-width="0.8"/>
   </g>
   <text x="822" y="350" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#f59e0b" letter-spacing="1.5" opacity="0.8">FILED &amp; FIXED</text>
-  <text x="822" y="430" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="72" font-weight="800" fill="#e2e8f0" letter-spacing="-3">15</text>
+  <text x="822" y="430" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="72" font-weight="800" fill="#e2e8f0" letter-spacing="-3">16</text>
   <text x="822" y="465" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="13" fill="#64748b">issues fixed by maintainers</text>
   <text x="822" y="540" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" fill="#f59e0b" opacity="0.7">open-webui · react-native-plaid-link-sdk · ai · turborepo · ts-sdk</text>
 

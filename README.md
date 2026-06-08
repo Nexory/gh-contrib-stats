@@ -51,10 +51,12 @@ jobs:
 Add this line to your profile `README.md`:
 
 ```markdown
-![GitHub Contribution Stats](https://raw.githubusercontent.com/YOURHANDLE/YOURHANDLE/main/card.svg)
+[![GitHub Contribution Stats](https://raw.githubusercontent.com/YOURHANDLE/YOURHANDLE/main/card.svg)](https://github.com/Nexory/BugMergeStats)
 ```
 
 That's it. The first time the workflow runs (you can trigger it manually under the Actions tab) it commits `card.svg` to the repo, and the README image link starts resolving. After that the daily cron keeps it fresh.
+
+The image is wrapped in a Markdown link because GitHub's camo proxy strips link interactivity from inside embedded SVGs. The wrap pattern makes the whole card clickable in the README context. If you'd rather not include the attribution wrap, drop the surrounding `[...]( https://github.com/Nexory/BugMergeStats )` and the bare `![](url)` form still works fine.
 
 ## Run it locally (without the Action)
 

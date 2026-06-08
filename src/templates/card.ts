@@ -86,6 +86,11 @@ export function cardTemplate(d: MetricsResult): string {
   <rect x="115" y="490" width="150" height="34" rx="17" fill="#1e2d5a"/>
   <text x="190" y="512" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#7dd3fc" text-anchor="middle">${esc(d.filedAndFixedCount)} filed &amp; fixed</text>
 
+  <!-- Tool attribution. SVG <a> works on direct view; camo strips link interactivity in README embeds (text remains visible). README-side workaround: wrap the embed in a markdown link. -->
+  <a href="https://github.com/Nexory/BugMergeStats" target="_blank" rel="noopener">
+    <text x="190" y="552" font-family="'Inter','Segoe UI',system-ui,sans-serif" font-size="10" fill="#64748b" text-anchor="middle" opacity="0.6">stats by BugMergeStats</text>
+  </a>
+
   <!-- TOP-LEFT: Issues Filed (green) -->
   <rect x="415" y="40" width="365" height="250" rx="14" fill="#0d1f3c"/>
   <rect x="415" y="40" width="365" height="250" rx="14" fill="none" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>

@@ -1,6 +1,6 @@
 {
   "name": "bugmerge-stats",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate a static SVG contribution card with the unique filed-and-fixed metric",
   "type": "module",
   "bin": {
